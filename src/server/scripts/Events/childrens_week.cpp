@@ -173,7 +173,7 @@ class npc_winterfin_playmate : public CreatureScript
                         }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!phase)
                     return;
@@ -189,10 +189,10 @@ class npc_winterfin_playmate : public CreatureScript
                         return;
                     }
 
-                    switch(phase)
+                    switch (phase)
                     {
                         case 1:
-                            orphan->GetMotionMaster()->MovePoint(0, me->GetPositionX() + cos(me->GetOrientation()) * 5,me->GetPositionY() + sin(me->GetOrientation()) * 5, me->GetPositionZ());
+                            orphan->GetMotionMaster()->MovePoint(0, me->GetPositionX() + cos(me->GetOrientation()) * 5, me->GetPositionY() + sin(me->GetOrientation()) * 5, me->GetPositionZ());
                             orphan->AI()->Talk(TEXT_ORACLE_ORPHAN_1);
                             timer = 3000;
                             break;
@@ -271,7 +271,7 @@ class npc_snowfall_glade_playmate : public CreatureScript
                         }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!phase)
                     return;
@@ -290,7 +290,7 @@ class npc_snowfall_glade_playmate : public CreatureScript
                     switch (phase)
                     {
                         case 1:
-                            orphan->GetMotionMaster()->MovePoint(0, me->GetPositionX() + cos(me->GetOrientation()) * 5,me->GetPositionY() + sin(me->GetOrientation()) * 5, me->GetPositionZ());
+                            orphan->GetMotionMaster()->MovePoint(0, me->GetPositionX() + cos(me->GetOrientation()) * 5, me->GetPositionY() + sin(me->GetOrientation()) * 5, me->GetPositionZ());
                             orphan->AI()->Talk(TEXT_WOLVAR_ORPHAN_1);
                             timer = 5000;
                             break;
@@ -371,7 +371,7 @@ class npc_the_biggest_tree : public CreatureScript
                         }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!phase)
                     return;
@@ -457,7 +457,7 @@ class npc_high_oracle_soo_roo : public CreatureScript
                         }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!phase)
                     return;
@@ -545,7 +545,7 @@ class npc_elder_kekek : public CreatureScript
                         }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!phase)
                     return;
@@ -633,7 +633,7 @@ class npc_the_etymidian : public CreatureScript
                         }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!phase)
                     return;
@@ -755,7 +755,7 @@ class npc_alexstraza_the_lifebinder : public CreatureScript
                     }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!phase)
                     return;
@@ -810,7 +810,7 @@ class npc_alexstraza_the_lifebinder : public CreatureScript
                             timer = 5000;
                             break;
                         case 8:
-                            if(Creature* krasus = me->FindNearestCreature(NPC_KRASUS, 10.0f))
+                            if (Creature* krasus = me->FindNearestCreature(NPC_KRASUS, 10.0f))
                             {
                                 orphan->SetFacingToObject(krasus);
                                 krasus->AI()->Talk(TEXT_KRASUS_8);
@@ -974,7 +974,7 @@ class npc_cw_area_trigger : public CreatureScript
                                             if (Creature* samuro = me->FindNearestCreature(25151, 20.0f))
                                             {
                                                 uint32 emote = 0;
-                                                switch(urand(1,5))
+                                                switch (urand(1, 5))
                                                 {
                                                     case 1:
                                                         emote = EMOTE_ONESHOT_WAVE;

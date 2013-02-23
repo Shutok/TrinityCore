@@ -24,6 +24,7 @@
 #define __WORLDSESSION_H
 
 #include "Common.h"
+#include "AccountMgr.h"
 #include "SharedDefines.h"
 #include "AddonMgr.h"
 #include "DatabaseEnv.h"
@@ -48,15 +49,18 @@ struct AreaTableEntry;
 struct AuctionEntry;
 struct DeclinedName;
 struct ItemTemplate;
+struct MovementInfo;
+
+namespace lfg
+{
 struct LfgJoinResultData;
-struct LfgLockStatus;
 struct LfgPlayerBoot;
 struct LfgProposal;
 struct LfgQueueStatusData;
-struct LfgReward;
+struct LfgPlayerRewardData;
 struct LfgRoleCheck;
 struct LfgUpdateData;
-struct MovementInfo;
+}
 
 enum AccountDataType
 {
@@ -181,9 +185,6 @@ class CharacterCreateInfo
 
         /// Server side data
         uint8 CharCount;
-
-    private:
-        virtual ~CharacterCreateInfo(){};
 };
 
 /// Player session in the World
@@ -215,6 +216,10 @@ class WorldSession
 
         void SendAuthResponse(uint8 code, bool shortForm, uint32 queuePos = 0);
         void SendClientCacheVersion(uint32 version);
+
+        RBACData* GetRBACData();
+        bool HasPermission(uint32 permissionId);
+        void LoadPermissions();
 
         AccountTypes GetSecurity() const { return _security; }
         uint32 GetAccountId() const { return _accountId; }
@@ -248,7 +253,7 @@ class WorldSession
             return (_logoutTime > 0 && currTime >= _logoutTime + 20);
         }
 
-        void LogoutPlayer(bool Save);
+        void LogoutPlayer(bool save);
         void KickPlayer();
 
         void QueuePacket(WorldPacket* new_packet);
@@ -270,7 +275,7 @@ class WorldSession
 
         void SendAttackStop(Unit const* enemy);
 
-        void SendBattleGroundList(uint64 guid, BattlegroundTypeId bgTypeId);
+        void SendBattleGroundList(uint64 guid, BattlegroundTypeId bgTypeId = BATTLEGROUND_RB);
 
         void SendTradeStatus(TradeStatus status);
         void SendUpdateTrade(bool trader_data = true);
@@ -327,7 +332,7 @@ class WorldSession
         void SendDiscoverNewTaxiNode(uint32 nodeid);
 
         // Guild/Arena Team
-        void SendArenaTeamCommandResult(uint32 team_action, std::string const& team, std::string const& player, uint32 error_id);
+        void SendArenaTeamCommandResult(uint32 team_action, std::string const& team, std::string const& player, uint32 error_id = 0);
         void SendNotInArenaTeamPacket(uint8 type);
         void SendPetitionShowList(uint64 guid);
 
@@ -741,7 +746,7 @@ class WorldSession
         void HandlePVPLogDataOpcode(WorldPacket& recvData);
         void HandleBattleFieldPortOpcode(WorldPacket& recvData);
         void HandleBattlefieldListOpcode(WorldPacket& recvData);
-        void HandleLeaveBattlefieldOpcode(WorldPacket& recvData);
+        void HandleBattlefieldLeaveOpcode(WorldPacket& recvData);
         void HandleBattlemasterJoinArena(WorldPacket& recvData);
         void HandleReportPvPAFK(WorldPacket& recvData);
 
@@ -762,14 +767,14 @@ class WorldSession
         void HandleInstanceLockResponse(WorldPacket& recvPacket);
 
         // Battlefield
-        void SendBfInvitePlayerToWar(uint32 BattleId,uint32 ZoneId,uint32 time);
-        void SendBfInvitePlayerToQueue(uint32 BattleId);
-        void SendBfQueueInviteResponse(uint32 BattleId,uint32 ZoneId, bool CanQueue = true, bool Full = false);
-        void SendBfEntered(uint32 BattleId);
-        void SendBfLeaveMessage(uint32 BattleId, BFLeaveReason reason = BF_LEAVE_REASON_EXITED);
-        void HandleBfQueueInviteResponse(WorldPacket &recvData);
-        void HandleBfEntryInviteResponse(WorldPacket &recvData);
-        void HandleBfExitRequest(WorldPacket &recvData);
+        void SendBfInvitePlayerToWar(uint32 battleId, uint32 zoneId, uint32 time);
+        void SendBfInvitePlayerToQueue(uint32 battleId);
+        void SendBfQueueInviteResponse(uint32 battleId, uint32 zoneId, bool canQueue = true, bool full = false);
+        void SendBfEntered(uint32 battleId);
+        void SendBfLeaveMessage(uint32 battleId, BFLeaveReason reason = BF_LEAVE_REASON_EXITED);
+        void HandleBfQueueInviteResponse(WorldPacket& recvData);
+        void HandleBfEntryInviteResponse(WorldPacket& recvData);
+        void HandleBfExitRequest(WorldPacket& recvData);
 
         // Looking for Dungeon/Raid
         void HandleLfgSetCommentOpcode(WorldPacket& recvData);
@@ -785,16 +790,16 @@ class WorldSession
         void HandleLfrLeaveOpcode(WorldPacket& recvData);
         void HandleLfgGetStatus(WorldPacket& recvData);
 
-        void SendLfgUpdatePlayer(const LfgUpdateData& updateData);
-        void SendLfgUpdateParty(const LfgUpdateData& updateData);
+        void SendLfgUpdatePlayer(lfg::LfgUpdateData const& updateData);
+        void SendLfgUpdateParty(lfg::LfgUpdateData const& updateData);
         void SendLfgRoleChosen(uint64 guid, uint8 roles);
-        void SendLfgRoleCheckUpdate(const LfgRoleCheck& pRoleCheck);
+        void SendLfgRoleCheckUpdate(lfg::LfgRoleCheck const& pRoleCheck);
         void SendLfgLfrList(bool update);
-        void SendLfgJoinResult(const LfgJoinResultData& joinData);
-        void SendLfgQueueStatus(const LfgQueueStatusData& queueData);
-        void SendLfgPlayerReward(uint32 rdungeonEntry, uint32 sdungeonEntry, uint8 done, const LfgReward* reward, const Quest *qRew);
-        void SendLfgBootProposalUpdate(const LfgPlayerBoot& boot);
-        void SendLfgUpdateProposal(uint32 proposalId, const LfgProposal& proposal);
+        void SendLfgJoinResult(lfg::LfgJoinResultData const& joinData);
+        void SendLfgQueueStatus(lfg::LfgQueueStatusData const& queueData);
+        void SendLfgPlayerReward(lfg::LfgPlayerRewardData const& lfgPlayerRewardData);
+        void SendLfgBootProposalUpdate(lfg::LfgPlayerBoot const& boot);
+        void SendLfgUpdateProposal(lfg::LfgProposal const& proposal);
         void SendLfgDisabled();
         void SendLfgOfferContinue(uint32 dungeonEntry);
         void SendLfgTeleportError(uint8 err);
@@ -914,14 +919,14 @@ class WorldSession
         void LogUnprocessedTail(WorldPacket* packet);
 
         // EnumData helpers
-        bool CharCanLogin(uint32 lowGUID)
+        bool IsLegitCharacterForAccount(uint32 lowGUID)
         {
-            return _allowedCharsToLogin.find(lowGUID) != _allowedCharsToLogin.end();
+            return _legitCharacters.find(lowGUID) != _legitCharacters.end();
         }
 
         // this stores the GUIDs of the characters who can login
         // characters who failed on Player::BuildEnumData shouldn't login
-        std::set<uint32> _allowedCharsToLogin;
+        std::set<uint32> _legitCharacters;
 
         uint32 m_GUIDLow;                                   // set loggined or recently logout player (while m_playerRecentlyLogout set)
         Player* _player;
@@ -954,6 +959,7 @@ class WorldSession
         bool isRecruiter;
         ACE_Based::LockedQueue<WorldPacket*, ACE_Thread_Mutex> _recvQueue;
         time_t timeLastWhoCommand;
+        RBACData* _RBACData;
 };
 #endif
 /// @}

@@ -29,6 +29,9 @@
 #include "ObjectAccessor.h"
 #include "WorldSession.h"
 
+namespace lfg
+{
+
 LFGPlayerScript::LFGPlayerScript() : PlayerScript("LFGPlayerScript")
 {
 }
@@ -85,6 +88,38 @@ void LFGPlayerScript::OnBindToInstance(Player* player, Difficulty difficulty, ui
         sLFGMgr->InitializeLockedDungeons(player);
 }
 
+void LFGPlayerScript::OnMapChanged(Player* player)
+{
+    Map const* map = player->GetMap();
+
+    if (sLFGMgr->inLfgDungeonMap(player->GetGUID(), map->GetId(), map->GetDifficulty()))
+    {
+        Group* group = player->GetGroup();
+        // This function is also called when players log in
+        // if for some reason the LFG system recognises the player as being in a LFG dungeon,
+        // but the player was loaded without a valid group, we'll teleport to homebind to prevent
+        // crashes or other undefined behaviour
+        if (!group)
+        {
+            sLFGMgr->LeaveLfg(player->GetGUID());
+            player->RemoveAurasDueToSpell(LFG_SPELL_LUCK_OF_THE_DRAW);
+            player->TeleportTo(player->m_homebindMapId, player->m_homebindX, player->m_homebindY, player->m_homebindZ, 0.0f);
+            sLog->outError(LOG_FILTER_LFG, "LFGPlayerScript::OnMapChanged, Player %s (%u) is in LFG dungeon map but does not have a valid group! "
+                "Teleporting to homebind.", player->GetName().c_str(), player->GetGUIDLow());
+            return;
+        }
+
+        for (GroupReference* itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
+            if (Player* member = itr->getSource())
+                player->GetSession()->SendNameQueryOpcode(member->GetGUID());
+
+        if (sLFGMgr->selectedRandomLfgDungeon(player->GetGUID()))
+            player->CastSpell(player, LFG_SPELL_LUCK_OF_THE_DRAW, true);
+    }
+    else
+        player->RemoveAurasDueToSpell(LFG_SPELL_LUCK_OF_THE_DRAW);
+}
+
 LFGGroupScript::LFGGroupScript() : GroupScript("LFGGroupScript")
 {
 }
@@ -107,20 +142,10 @@ void LFGGroupScript::OnAddMember(Group* group, uint64 guid)
         LfgState gstate = sLFGMgr->GetState(gguid);
         LfgState state = sLFGMgr->GetState(guid);
         sLog->outDebug(LOG_FILTER_LFG, "LFGScripts::OnAddMember [" UI64FMTD "]: added [" UI64FMTD "] leader " UI64FMTD "] gstate: %u, state: %u", gguid, guid, leader, gstate, state);
-        LfgUpdateData updateData = LfgUpdateData(LFG_UPDATETYPE_UPDATE_STATUS);
-        for (GroupReference* itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
-        {
-            if (Player* plrg = itr->getSource())
-            {
-                plrg->GetSession()->SendLfgUpdatePlayer(updateData);
-                plrg->GetSession()->SendLfgUpdateParty(updateData);
-            }
-        }
 
         if (state == LFG_STATE_QUEUED)
             sLFGMgr->LeaveLfg(guid);
 
-        // TODO - if group is queued and new player is added convert to rolecheck without notify the current players queued
         if (gstate == LFG_STATE_QUEUED)
             sLFGMgr->LeaveLfg(gguid);
     }
@@ -218,3 +243,5 @@ void LFGGroupScript::OnInviteMember(Group* group, uint64 guid)
     if (leader && !gguid)
         sLFGMgr->LeaveLfg(leader);
 }
+
+} // namespace lfg
