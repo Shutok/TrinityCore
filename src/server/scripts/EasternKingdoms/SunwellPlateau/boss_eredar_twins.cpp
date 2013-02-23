@@ -114,7 +114,7 @@ public:
 
             if (instance)
             {
-                if (Creature *temp =  Unit::GetCreature(*me, instance->GetData64(DATA_ALYTHESS)))
+                if (Creature* temp =  Unit::GetCreature(*me, instance->GetData64(DATA_ALYTHESS)))
                 {
                     if (temp->isDead())
                         temp->Respawn();
@@ -145,7 +145,7 @@ public:
 
             if (instance)
             {
-                Creature *temp = Unit::GetCreature(*me, instance->GetData64(DATA_ALYTHESS));
+                Creature* temp = Unit::GetCreature(*me, instance->GetData64(DATA_ALYTHESS));
                 if (temp && temp->isAlive() && !temp->getVictim())
                     temp->AI()->AttackStart(who);
             }
@@ -217,7 +217,7 @@ public:
             }
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 diff)
         {
             if (!SisterDeath)
             {
@@ -345,10 +345,12 @@ public:
         return new boss_alythessAI (creature);
     };
 
-    struct boss_alythessAI : public Scripted_NoMovementAI
+    struct boss_alythessAI : public ScriptedAI
     {
-        boss_alythessAI(Creature* creature) : Scripted_NoMovementAI(creature)
+        boss_alythessAI(Creature* creature) : ScriptedAI(creature)
         {
+            SetCombatMovement(false);
+
             instance = creature->GetInstanceScript();
             IntroStepCounter = 10;
         }
@@ -374,7 +376,7 @@ public:
 
             if (instance)
             {
-                if (Creature *temp = Unit::GetCreature((*me), instance->GetData64(DATA_SACROLASH)))
+                if (Creature* temp = Unit::GetCreature((*me), instance->GetData64(DATA_SACROLASH)))
                 {
                     if (temp->isDead())
                         temp->Respawn();
@@ -406,7 +408,7 @@ public:
 
             if (instance)
             {
-                Creature *temp = Unit::GetCreature(*me, instance->GetData64(DATA_SACROLASH));
+                Creature* temp = Unit::GetCreature(*me, instance->GetData64(DATA_SACROLASH));
                 if (temp && temp->isAlive() && !temp->getVictim())
                     temp->AI()->AttackStart(who);
             }
@@ -418,9 +420,7 @@ public:
         void AttackStart(Unit* who)
         {
             if (!me->isInCombat())
-            {
-                Scripted_NoMovementAI::AttackStart(who);
-            }
+                ScriptedAI::AttackStart(who);
         }
 
         void MoveInLineOfSight(Unit* who)
@@ -542,7 +542,7 @@ public:
             return 10000;
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 diff)
         {
             if (IntroStepCounter < 9)
             {
@@ -707,7 +707,7 @@ public:
             }
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 diff)
         {
             if (!me->HasAura(SPELL_IMAGE_VISUAL))
                 DoCast(me, SPELL_IMAGE_VISUAL);

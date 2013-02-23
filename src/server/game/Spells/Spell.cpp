@@ -490,7 +490,7 @@ SpellValue::SpellValue(SpellInfo const* proto)
 Spell::Spell(Unit* caster, SpellInfo const* info, TriggerCastFlags triggerFlags, uint64 originalCasterGUID, bool skipCheck) :
 m_spellInfo(sSpellMgr->GetSpellForDifficultyFromSpell(info, caster)),
 m_caster((info->AttributesEx6 & SPELL_ATTR6_CAST_BY_CHARMER && caster->GetCharmerOrOwner()) ? caster->GetCharmerOrOwner() : caster)
-, m_spellValue(new SpellValue(m_spellInfo))
+, m_spellValue(new SpellValue(m_spellInfo)), m_preGeneratedPath(PathGenerator(m_caster))
 {
     m_customError = SPELL_CUSTOM_ERROR_NONE;
     m_skipCheck = skipCheck;
@@ -610,6 +610,7 @@ Spell::~Spell()
 
     if (m_caster && m_caster->GetTypeId() == TYPEID_PLAYER)
         ASSERT(m_caster->ToPlayer()->m_spellModTakingSpell != this);
+
     delete m_spellValue;
 
     CheckEffectExecuteData();
@@ -1345,11 +1346,6 @@ void Spell::SelectImplicitAreaTargets(SpellEffIndex effIndex, SpellImplicitTarge
             }
         }
 
-        // todo: move to scripts, but we must call it before resize list by MaxAffectedTargets
-        // Intimidating Shout
-        if (m_spellInfo->Id == 5246 && effIndex != EFFECT_0)
-            unitTargets.remove(m_targets.GetUnitTarget());
-
         // Other special target selection goes here
         if (uint32 maxTargets = m_spellValue->MaxAffectedTargets)
         {
@@ -1880,7 +1876,7 @@ void Spell::SearchTargets(SEARCHER& searcher, uint32 containerMask, Unit* refere
     bool searchInWorld = containerMask & (GRID_MAP_TYPE_MASK_CREATURE | GRID_MAP_TYPE_MASK_PLAYER | GRID_MAP_TYPE_MASK_CORPSE);
     if (searchInGrid || searchInWorld)
     {
-        float x,y;
+        float x, y;
         x = pos->GetPositionX();
         y = pos->GetPositionY();
 
@@ -1898,7 +1894,7 @@ void Spell::SearchTargets(SEARCHER& searcher, uint32 containerMask, Unit* refere
         if (searchInGrid)
         {
             TypeContainerVisitor<SEARCHER, GridTypeMapContainer >  grid_object_notifier(searcher);
-            cell.Visit(p, grid_object_notifier, map, radius, x , y);
+            cell.Visit(p, grid_object_notifier, map, radius, x, y);
         }
     }
 }
@@ -2591,7 +2587,7 @@ SpellMissInfo Spell::DoSpellHitOnUnit(Unit* unit, uint32 effectMask, bool scaleA
                 debuff_resist_chance += unit->GetMaxNegativeAuraModifierByMiscValue(SPELL_AURA_MOD_DEBUFF_RESISTANCE, int32(m_spellInfo->Dispel));
 
                 if (debuff_resist_chance > 0)
-                    if (irand(0,10000) <= (debuff_resist_chance * 100))
+                    if (irand(0, 10000) <= (debuff_resist_chance * 100))
                     {
                         effectMask &= ~(1 << effectNumber);
                         returnVal = SPELL_MISS_RESIST;
@@ -4914,7 +4910,7 @@ SpellCastResult Spell::CheckCast(bool strict)
                 return SPELL_FAILED_NOT_INFRONT;
 
             if (m_caster->GetEntry() != WORLD_TRIGGER) // Ignore LOS for gameobjects casts (wrongly casted by a trigger)
-                if (!(m_spellInfo->AttributesEx2 & SPELL_ATTR2_CAN_TARGET_NOT_IN_LOS) && VMAP::VMapFactory::checkSpellForLoS(m_spellInfo->Id) && !m_caster->IsWithinLOSInMap(target))
+                if (!(m_spellInfo->AttributesEx2 & SPELL_ATTR2_CAN_TARGET_NOT_IN_LOS) && !DisableMgr::IsDisabledFor(DISABLE_TYPE_SPELL, m_spellInfo->Id, NULL, SPELL_DISABLE_LOS) && !m_caster->IsWithinLOSInMap(target))
                     return SPELL_FAILED_LINE_OF_SIGHT;
         }
     }
@@ -4925,7 +4921,7 @@ SpellCastResult Spell::CheckCast(bool strict)
         float x, y, z;
         m_targets.GetDstPos()->GetPosition(x, y, z);
 
-        if (!(m_spellInfo->AttributesEx2 & SPELL_ATTR2_CAN_TARGET_NOT_IN_LOS) && VMAP::VMapFactory::checkSpellForLoS(m_spellInfo->Id) && !m_caster->IsWithinLOS(x, y, z))
+        if (!(m_spellInfo->AttributesEx2 & SPELL_ATTR2_CAN_TARGET_NOT_IN_LOS) && !DisableMgr::IsDisabledFor(DISABLE_TYPE_SPELL, m_spellInfo->Id, NULL, SPELL_DISABLE_LOS) && !m_caster->IsWithinLOS(x, y, z))
             return SPELL_FAILED_LINE_OF_SIGHT;
     }
 
@@ -5148,12 +5144,27 @@ SpellCastResult Spell::CheckCast(bool strict)
                     if (strict && m_caster->IsScriptOverriden(m_spellInfo, 6953))
                         m_caster->RemoveMovementImpairingAuras();
                 }
+
                 if (m_caster->HasUnitState(UNIT_STATE_ROOT))
                     return SPELL_FAILED_ROOTED;
-                if (m_caster->GetTypeId() == TYPEID_PLAYER)
-                    if (Unit* target = m_targets.GetUnitTarget())
-                        if (!target->isAlive())
-                            return SPELL_FAILED_BAD_TARGETS;
+
+                if (GetSpellInfo()->NeedsExplicitUnitTarget())
+                {
+                    Unit* target = m_targets.GetUnitTarget();
+                    if (!target)
+                        return SPELL_FAILED_DONT_REPORT;
+
+                    Position pos;
+                    target->GetContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+                    target->GetFirstCollisionPosition(pos, CONTACT_DISTANCE, target->GetRelativeAngle(m_caster));
+
+                    m_preGeneratedPath.SetPathLengthLimit(m_spellInfo->GetMaxRange(true) * 1.5f);
+                    bool result = m_preGeneratedPath.CalculatePath(pos.m_positionX, pos.m_positionY, pos.m_positionZ + target->GetObjectSize());
+                    if (m_preGeneratedPath.GetPathType() & PATHFIND_SHORT)
+                        return SPELL_FAILED_OUT_OF_RANGE;
+                    else if (!result || m_preGeneratedPath.GetPathType() & PATHFIND_NOPATH)
+                        return SPELL_FAILED_NOPATH;
+                }
                 break;
             }
             case SPELL_EFFECT_SKINNING:
@@ -6505,7 +6516,7 @@ bool Spell::CheckEffectTarget(Unit const* target, uint32 eff) const
             break;
     }
 
-    if (IsTriggered() || m_spellInfo->AttributesEx2 & SPELL_ATTR2_CAN_TARGET_NOT_IN_LOS)
+    if (IsTriggered() || m_spellInfo->AttributesEx2 & SPELL_ATTR2_CAN_TARGET_NOT_IN_LOS || DisableMgr::IsDisabledFor(DISABLE_TYPE_SPELL, m_spellInfo->Id, NULL, SPELL_DISABLE_LOS))
         return true;
 
     // todo: shit below shouldn't be here, but it's temporary

@@ -35,7 +35,6 @@ enum Misc
     RAND_VENDOR                    = 2,
     WORLDSTATE_SHOW_TIMER          = 3104,
     WORLDSTATE_TIME_TO_SACRIFICE   = 3106
-
 };
 
 // Chests spawn at bear/eagle/dragonhawk/lynx bosses
@@ -55,6 +54,8 @@ static SHostageInfo HostageInfo[] =
     {24024, 186667, 413, 1117,  6.32f, 3.1f}  // lynx
 };
 
+Position const HarrisonJonesLoc = {120.687f, 1674.0f, 42.0217f, 1.59044f};
+
 class instance_zulaman : public InstanceMapScript
 {
     public:
@@ -72,6 +73,7 @@ class instance_zulaman : public InstanceMapScript
             uint64 AshlisBagGUID;
             uint64 KrazsPackageGUID;
             uint64 StrangeGongGUID;
+            uint64 HarrisonJonesGUID;
 
             uint64 HexLordGateGUID;
             uint64 ZulJinGateGUID;
@@ -104,13 +106,17 @@ class instance_zulaman : public InstanceMapScript
                 HalazziDoorGUID = 0;
                 ZulJinDoorGUID = 0;
 
+                HarrisonJonesGUID = 0;
+
                 QuestTimer = 0;
-                QuestMinute = 21;
+                QuestMinute = 0;
                 BossKilled = 0;
                 ChestLooted = 0;
 
                 for (uint8 i = 0; i < RAND_VENDOR; ++i)
                     RandVendor[i] = NOT_STARTED;
+
+                m_auiEncounter[DATA_GONGEVENT] = NOT_STARTED;
             }
 
             bool IsEncounterInProgress() const
@@ -122,19 +128,26 @@ class instance_zulaman : public InstanceMapScript
                 return false;
             }
 
+            void OnPlayerEnter(Player* /*player*/)
+            {
+                if (!HarrisonJonesGUID)
+                    instance->SummonCreature(NPC_HARRISON_JONES, HarrisonJonesLoc);
+            }
+
             void OnCreatureCreate(Creature* creature)
             {
                 switch (creature->GetEntry())
                 {
-                case NPC_HARRISON_JONES:
-                    if ((DATA_GONGEVENT) == DONE)
-                        creature->RemoveFromWorld();
-                case NPC_JANALAI:
-                case NPC_ZULJIN:
-                case NPC_HEXLORD:
-                case NPC_HALAZZI:
-                case NPC_NALORAKK:
-                default: break;
+                    case NPC_HARRISON_JONES:
+                        HarrisonJonesGUID = creature->GetGUID();
+                        break;
+                    case NPC_JANALAI:
+                    case NPC_ZULJIN:
+                    case NPC_HEXLORD:
+                    case NPC_HALAZZI:
+                    case NPC_NALORAKK:
+                    default:
+                        break;
                 }
             }
 
@@ -142,19 +155,19 @@ class instance_zulaman : public InstanceMapScript
             {
                 switch (go->GetEntry())
                 {
-                case GO_DOOR_HALAZZI: HalazziDoorGUID = go->GetGUID(); break;
-                case GO_GATE_ZULJIN: ZulJinGateGUID = go->GetGUID(); break;
-                case GO_GATE_HEXLORD: HexLordGateGUID = go->GetGUID(); break;
-                case GO_MASSIVE_GATE: MassiveGateGUID = go->GetGUID(); break;
-                case GO_DOOR_AKILZON: AkilzonDoorGUID = go->GetGUID(); break;
-                case GO_DOOR_ZULJIN: ZulJinDoorGUID = go->GetGUID(); break;
+                    case GO_DOOR_HALAZZI: HalazziDoorGUID = go->GetGUID(); break;
+                    case GO_GATE_ZULJIN: ZulJinGateGUID = go->GetGUID(); break;
+                    case GO_GATE_HEXLORD: HexLordGateGUID = go->GetGUID(); break;
+                    case GO_MASSIVE_GATE: MassiveGateGUID = go->GetGUID(); break;
+                    case GO_DOOR_AKILZON: AkilzonDoorGUID = go->GetGUID(); break;
+                    case GO_DOOR_ZULJIN: ZulJinDoorGUID = go->GetGUID(); break;
 
-                case GO_HARKORS_SATCHEL: HarkorsSatchelGUID = go->GetGUID(); break;
-                case GO_TANZARS_TRUNK: TanzarsTrunkGUID = go->GetGUID(); break;
-                case GO_ASHLIS_BAG: AshlisBagGUID = go->GetGUID(); break;
-                case GO_KRAZS_PACKAGE: KrazsPackageGUID = go->GetGUID(); break;
-                case GO_STRANGE_GONG: StrangeGongGUID = go->GetGUID(); break;
-                default: break;
+                    case GO_HARKORS_SATCHEL: HarkorsSatchelGUID = go->GetGUID(); break;
+                    case GO_TANZARS_TRUNK: TanzarsTrunkGUID = go->GetGUID(); break;
+                    case GO_ASHLIS_BAG: AshlisBagGUID = go->GetGUID(); break;
+                    case GO_KRAZS_PACKAGE: KrazsPackageGUID = go->GetGUID(); break;
+                    case GO_STRANGE_GONG: StrangeGongGUID = go->GetGUID(); break;
+                    default: break;
                 }
                 CheckInstanceStatus();
             }
@@ -224,7 +237,10 @@ class instance_zulaman : public InstanceMapScript
                 {
                 case DATA_GONGEVENT:
                     m_auiEncounter[DATA_GONGEVENT] = data;
-                    HandleGameObject(MassiveGateGUID, data == DONE);
+                    if (data == IN_PROGRESS)
+                        SaveToDB();
+                    else if (data == DONE)
+                        QuestMinute = 21;
                     break;
                 case DATA_NALORAKKEVENT:
                     m_auiEncounter[DATA_NALORAKKEVENT] = data;
@@ -301,13 +317,13 @@ class instance_zulaman : public InstanceMapScript
             {
                 switch (type)
                 {
-                case DATA_GONGEVENT:     return m_auiEncounter[0];
-                case DATA_NALORAKKEVENT: return m_auiEncounter[1];
-                case DATA_AKILZONEVENT:  return m_auiEncounter[2];
-                case DATA_JANALAIEVENT:  return m_auiEncounter[3];
-                case DATA_HALAZZIEVENT:  return m_auiEncounter[4];
-                case DATA_HEXLORDEVENT:  return m_auiEncounter[5];
-                case DATA_ZULJINEVENT:   return m_auiEncounter[6];
+                case DATA_GONGEVENT:     return m_auiEncounter[DATA_GONGEVENT];
+                case DATA_NALORAKKEVENT: return m_auiEncounter[DATA_NALORAKKEVENT];
+                case DATA_AKILZONEVENT:  return m_auiEncounter[DATA_AKILZONEVENT];
+                case DATA_JANALAIEVENT:  return m_auiEncounter[DATA_JANALAIEVENT];
+                case DATA_HALAZZIEVENT:  return m_auiEncounter[DATA_HALAZZIEVENT];
+                case DATA_HEXLORDEVENT:  return m_auiEncounter[DATA_HEXLORDEVENT];
+                case DATA_ZULJINEVENT:   return m_auiEncounter[DATA_ZULJINEVENT];
                 case DATA_CHESTLOOTED:   return ChestLooted;
                 case TYPE_RAND_VENDOR_1: return RandVendor[0];
                 case TYPE_RAND_VENDOR_2: return RandVendor[1];

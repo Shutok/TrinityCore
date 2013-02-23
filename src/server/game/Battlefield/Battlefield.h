@@ -71,7 +71,7 @@ class BfGraveyard;
 
 typedef std::set<uint64> GuidSet;
 typedef std::vector<BfGraveyard*> GraveyardVect;
-typedef std::map<uint64, uint32> PlayerTimerMap;
+typedef std::map<uint64, time_t> PlayerTimerMap;
 
 class BfCapturePoint
 {
@@ -277,7 +277,7 @@ class Battlefield : public ZoneScript
 
         // Graveyard methods
         // Find which graveyard the player must be teleported to to be resurrected by spiritguide
-        WorldSafeLocsEntry const * GetClosestGraveYard(Player* player);
+        WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
 
         virtual void AddPlayerToResurrectQueue(uint64 npc_guid, uint64 player_guid);
         void RemovePlayerFromResurrectQueue(uint64 player_guid);

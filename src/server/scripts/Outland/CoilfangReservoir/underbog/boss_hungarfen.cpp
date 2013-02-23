@@ -26,8 +26,11 @@ EndScriptData */
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 
-#define SPELL_FOUL_SPORES   31673
-#define SPELL_ACID_GEYSER   38739
+enum Spells
+{
+    SPELL_FOUL_SPORES           = 31673,
+    SPELL_ACID_GEYSER           = 38739
+};
 
 class boss_hungarfen : public CreatureScript
 {
@@ -60,7 +63,7 @@ public:
         {
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 diff)
         {
             if (!UpdateVictim())
                 return;
@@ -135,7 +138,7 @@ public:
 
         void EnterCombat(Unit* /*who*/) {}
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 diff)
         {
             if (Stop)
                 return;

@@ -167,7 +167,7 @@ enum Texts
 
 #define MAX_HOVER_DISK_WAYPOINTS 18
 
-// Sniffed data (x, y,z)
+// Sniffed data (x, y, z)
 const Position HoverDiskWaypoints[MAX_HOVER_DISK_WAYPOINTS] =
 {
    {782.9821f, 1296.652f, 282.1114f, 0.0f},
@@ -192,7 +192,7 @@ const Position HoverDiskWaypoints[MAX_HOVER_DISK_WAYPOINTS] =
 
 #define GROUND_Z 268
 
-// Source: Sniffs (x,y,z)
+// Source: Sniffs (x, y, z)
 #define MALYGOS_MAX_WAYPOINTS 16
 const Position MalygosPhaseTwoWaypoints[MALYGOS_MAX_WAYPOINTS] =
 {
@@ -501,7 +501,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 const diff)
+        void UpdateAI(uint32 diff)
         {
             if (!UpdateVictim())
                 return;
@@ -771,7 +771,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 const /*diff*/)
+        void UpdateAI(uint32 /*diff*/)
         {
             // When duration of oppened riff visual ends,
             // closed one should be cast
@@ -841,7 +841,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 const /*diff*/)
+        void UpdateAI(uint32 /*diff*/)
         {
             if (!_instance)
                 return;
@@ -941,7 +941,7 @@ public:
             // we dont evade
         }
 
-        void DoAction(int32 const action)
+        void DoAction(int32 action)
         {
             if (me->GetEntry() != NPC_HOVER_DISK_CASTER)
                 return;
@@ -1010,7 +1010,7 @@ public:
             DoCast(me, SPELL_ARCANE_OVERLOAD, false);
         }
 
-        void UpdateAI(uint32 const /*diff*/)
+        void UpdateAI(uint32 /*diff*/)
         {
             // we dont do melee damage!
         }
@@ -1066,7 +1066,7 @@ public:
             _events.ScheduleEvent(EVENT_YELL_1, 0);
         }
 
-        void UpdateAI(uint32 const /*diff*/)
+        void UpdateAI(uint32 /*diff*/)
         {
             while (uint32 eventId = _events.ExecuteEvent())
             {

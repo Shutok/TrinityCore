@@ -194,7 +194,7 @@ class boss_viscidus : public CreatureScript
                 summons.DespawnAll();
             }
 
-            void UpdateAI(uint32 const diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!UpdateVictim())
                     return;
@@ -279,7 +279,7 @@ class npc_glob_of_viscidus : public CreatureScript
                     else
                     {
                         Viscidus->SetHealth(Viscidus->GetHealth() - Viscidus->GetMaxHealth() / 20);
-                        Viscidus->GetAI()->DoCast(Viscidus, SPELL_VISCIDUS_SHRINKS);
+                        Viscidus->CastSpell(Viscidus, SPELL_VISCIDUS_SHRINKS);
                     }
                 }
             }

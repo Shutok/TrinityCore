@@ -17,6 +17,9 @@
 
 #include "LFGPlayerData.h"
 
+namespace lfg
+{
+
 LfgPlayerData::LfgPlayerData(): m_State(LFG_STATE_NONE), m_OldState(LFG_STATE_NONE),
     m_Team(0), m_Group(0), m_Roles(0), m_Comment("")
 {}
@@ -113,12 +116,14 @@ uint8 LfgPlayerData::GetRoles() const
     return m_Roles;
 }
 
-const std::string& LfgPlayerData::GetComment() const
+std::string const& LfgPlayerData::GetComment() const
 {
     return m_Comment;
 }
 
-const LfgDungeonSet& LfgPlayerData::GetSelectedDungeons() const
+LfgDungeonSet const& LfgPlayerData::GetSelectedDungeons() const
 {
     return m_SelectedDungeons;
 }
+
+} // namespace lfg

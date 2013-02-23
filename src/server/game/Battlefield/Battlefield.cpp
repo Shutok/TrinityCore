@@ -161,16 +161,17 @@ bool Battlefield::Update(uint32 diff)
         // Kick players who chose not to accept invitation to the battle
         if (m_uiKickDontAcceptTimer <= diff)
         {
+            time_t now = time(NULL);
             for (int team = 0; team < 2; team++)
                 for (PlayerTimerMap::iterator itr = m_InvitedPlayers[team].begin(); itr != m_InvitedPlayers[team].end(); ++itr)
-                    if ((*itr).second <= time(NULL))
-                        KickPlayerFromBattlefield((*itr).first);
+                    if (itr->second <= now)
+                        KickPlayerFromBattlefield(itr->first);
 
             InvitePlayersInZoneToWar();
             for (int team = 0; team < 2; team++)
                 for (PlayerTimerMap::iterator itr = m_PlayersWillBeKick[team].begin(); itr != m_PlayersWillBeKick[team].end(); ++itr)
-                    if ((*itr).second <= time(NULL))
-                        KickPlayerFromBattlefield((*itr).first);
+                    if (itr->second <= now)
+                        KickPlayerFromBattlefield(itr->first);
 
             m_uiKickDontAcceptTimer = 1000;
         }
@@ -469,13 +470,13 @@ void Battlefield::SendWarningToAllInZone(uint32 entry)
         sCreatureTextMgr->SendChat(stalker, (uint8) entry, 0, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_ADDON, TEXT_RANGE_ZONE);
 }
 
-/*void Battlefield::SendWarningToAllInWar(int32 entry,...)
+/*void Battlefield::SendWarningToAllInWar(int32 entry, ...)
 {
     const char *format = sObjectMgr->GetTrinityStringForDBCLocale(entry);
     va_list ap;
     char str [1024];
     va_start(ap, entry);
-    vsnprintf(str,1024,format, ap);
+    vsnprintf(str, 1024, format, ap);
     va_end(ap);
     std::string msg = (std::string)str;
 
@@ -604,7 +605,7 @@ BfGraveyard* Battlefield::GetGraveyardById(uint32 id) const
     return NULL;
 }
 
-WorldSafeLocsEntry const * Battlefield::GetClosestGraveYard(Player* player)
+WorldSafeLocsEntry const* Battlefield::GetClosestGraveYard(Player* player)
 {
     BfGraveyard* closestGY = NULL;
     float maxdist = -1;
@@ -816,7 +817,7 @@ Creature* Battlefield::SpawnCreature(uint32 entry, Position pos, TeamId team)
 Creature* Battlefield::SpawnCreature(uint32 entry, float x, float y, float z, float o, TeamId team)
 {
     //Get map object
-    Map* map = const_cast < Map * >(sMapMgr->CreateBaseMap(m_MapId));
+    Map* map = sMapMgr->CreateBaseMap(m_MapId);
     if (!map)
     {
         sLog->outError(LOG_FILTER_BATTLEFIELD, "Battlefield::SpawnCreature: Can't create creature entry: %u map not found", entry);
@@ -854,7 +855,7 @@ Creature* Battlefield::SpawnCreature(uint32 entry, float x, float y, float z, fl
 GameObject* Battlefield::SpawnGameObject(uint32 entry, float x, float y, float z, float o)
 {
     // Get map object
-    Map* map = const_cast<Map*>(sMapMgr->CreateBaseMap(571)); // *vomits*
+    Map* map = sMapMgr->CreateBaseMap(571); // *vomits*
     if (!map)
         return 0;
 

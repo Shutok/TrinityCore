@@ -66,9 +66,11 @@ void AddSC_list_commandscript();
 void AddSC_lookup_commandscript();
 void AddSC_message_commandscript();
 void AddSC_misc_commandscript();
+void AddSC_mmaps_commandscript();
 void AddSC_modify_commandscript();
 void AddSC_npc_commandscript();
 void AddSC_quest_commandscript();
+void AddSC_rbac_commandscript();
 void AddSC_reload_commandscript();
 void AddSC_reset_commandscript();
 void AddSC_server_commandscript();
@@ -590,6 +592,7 @@ void AddSC_boss_high_astromancer_solarian();
 void AddSC_instance_the_eye();
 void AddSC_the_eye();
 void AddSC_boss_gatewatcher_iron_hand();     //TK The Mechanar
+void AddSC_boss_gatewatcher_gyrokill();
 void AddSC_boss_nethermancer_sepethrea();
 void AddSC_boss_pathaleon_the_calculator();
 void AddSC_boss_mechano_lord_capacitus();
@@ -694,9 +697,11 @@ void AddCommandScripts()
     AddSC_list_commandscript();
     AddSC_message_commandscript();
     AddSC_misc_commandscript();
+    AddSC_mmaps_commandscript();
     AddSC_modify_commandscript();
     AddSC_npc_commandscript();
     AddSC_quest_commandscript();
+    AddSC_rbac_commandscript();
     AddSC_reload_commandscript();
     AddSC_reset_commandscript();
     AddSC_server_commandscript();
@@ -1073,6 +1078,7 @@ void AddOutlandScripts()
     AddSC_instance_the_eye();
     AddSC_the_eye();
     AddSC_boss_gatewatcher_iron_hand();     //TK The Mechanar
+    AddSC_boss_gatewatcher_gyrokill();
     AddSC_boss_nethermancer_sepethrea();
     AddSC_boss_pathaleon_the_calculator();
     AddSC_boss_mechano_lord_capacitus();

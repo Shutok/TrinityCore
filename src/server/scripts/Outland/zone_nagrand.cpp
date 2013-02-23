@@ -274,7 +274,7 @@ public:
             }
         }
 
-        void UpdateAI(const uint32 uiDiff)
+        void UpdateAI(uint32 uiDiff)
         {
             npc_escortAI::UpdateAI(uiDiff);
             if (!me->getVictim())
@@ -445,7 +445,7 @@ public:
           ReleasedFromCage = false;
       }
 
-      void UpdateAI(uint32 const diff)
+      void UpdateAI(uint32 diff)
       {
           if (ReleasedFromCage)
           {
@@ -628,7 +628,7 @@ public:
             }
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 diff)
         {
             if (!UpdateVictim())
                 return;
@@ -639,7 +639,7 @@ public:
             if (ChainLightningTimer <= diff)
             {
                 DoCast(me->getVictim(), SPELL_KUR_CHAIN_LIGHTNING);
-                ChainLightningTimer = urand(7000,14000);
+                ChainLightningTimer = urand(7000, 14000);
             } else ChainLightningTimer -= diff;
 
             if (HealthBelowPct(30))
@@ -654,7 +654,7 @@ public:
             if (FrostShockTimer <= diff)
             {
                 DoCast(me->getVictim(), SPELL_KUR_FROST_SHOCK);
-                FrostShockTimer = urand(7500,15000);
+                FrostShockTimer = urand(7500, 15000);
             } else FrostShockTimer -= diff;
 
             DoMeleeAttackIfReady();

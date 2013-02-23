@@ -57,7 +57,7 @@ enum Yells
     SAY_SLAY                                      = 3,
     SAY_DEATH                                     = 4,
     SAY_FEED                                      = 5,
-    SAY_VANISH                                    = 6,
+    SAY_VANISH                                    = 6
 };
 enum CombatPhase
 {
@@ -121,7 +121,7 @@ public:
             Talk(SAY_AGGRO);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 diff)
         {
             if (!UpdateVictim())
                 return;
@@ -370,7 +370,7 @@ public:
             DoCast(me, SPELL_FLAME_SPHERE_DEATH_EFFECT);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 diff)
         {
             if (uiDespawnTimer <= diff)
                 me->DisappearAndDie();
@@ -424,7 +424,7 @@ public:
 
 void AddSC_boss_taldaram()
 {
-    new boss_taldaram;
-    new mob_taldaram_flamesphere;
-    new prince_taldaram_sphere;
+    new boss_taldaram();
+    new mob_taldaram_flamesphere();
+    new prince_taldaram_sphere();
 }

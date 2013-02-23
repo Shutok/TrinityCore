@@ -565,10 +565,6 @@ class instance_ulduar : public InstanceMapScript
                             }
                             HandleGameObject(KologarnBridgeGUID, false);
                         }
-                        if (state == IN_PROGRESS)
-                            HandleGameObject(KologarnDoorGUID, false);
-                        else
-                            HandleGameObject(KologarnDoorGUID, true);
                         break;
                     case BOSS_HODIR:
                         if (state == DONE)
@@ -787,7 +783,7 @@ class instance_ulduar : public InstanceMapScript
                 return 0;
             }
 
-            bool CheckAchievementCriteriaMeet(uint32 criteriaId, Player const* , Unit const* /* = NULL */, uint32 /* = 0 */)
+            bool CheckAchievementCriteriaMeet(uint32 criteriaId, Player const*, Unit const* /* = NULL */, uint32 /* = 0 */)
             {
                 switch (criteriaId)
                 {

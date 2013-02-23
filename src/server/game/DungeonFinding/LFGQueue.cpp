@@ -27,6 +27,9 @@
 #include "World.h"
 #include "GroupMgr.h"
 
+namespace lfg
+{
+
 /**
    Given a list of guids returns the concatenation using | as delimiter
 
@@ -139,7 +142,7 @@ void LFGQueue::RemoveFromCurrentQueue(uint64 guid)
     currentQueueStore.remove(guid);
 }
 
-void LFGQueue::AddQueueData(uint64 guid, time_t joinTime, const LfgDungeonSet &dungeons, const LfgRolesMap &rolesMap)
+void LFGQueue::AddQueueData(uint64 guid, time_t joinTime, LfgDungeonSet const& dungeons, LfgRolesMap const& rolesMap)
 {
     QueueDataStore[guid] = LfgQueueData(joinTime, dungeons, rolesMap);
     AddToQueue(guid);
@@ -216,7 +219,6 @@ void LFGQueue::SetCompatibilityData(std::string const& key, LfgCompatibilityData
 {
     CompatibleMapStore[key] = data;
 }
-
 
 /**
    Get the compatibility of a group of guids
@@ -432,7 +434,7 @@ LfgCompatibility LFGQueue::CheckCompatibility(LfgGuidList check)
         {
             std::ostringstream o;
             for (LfgRolesMap::const_iterator it = debugRoles.begin(); it != debugRoles.end(); ++it)
-                o << ", " << it->first << ": " << sLFGMgr->GetRolesString(it->second);
+                o << ", " << it->first << ": " << GetRolesString(it->second);
 
             sLog->outDebug(LOG_FILTER_LFG, "LFGQueue::CheckCompatibility: (%s) Roles not compatible%s", strGuids.c_str(), o.str().c_str());
             SetCompatibles(strGuids, LFG_INCOMPATIBLES_NO_ROLES);
@@ -442,12 +444,12 @@ LfgCompatibility LFGQueue::CheckCompatibility(LfgGuidList check)
         LfgGuidList::iterator itguid = check.begin();
         proposalDungeons = QueueDataStore[*itguid].dungeons;
         std::ostringstream o;
-        o << ", " << *itguid << ": (" << sLFGMgr->ConcatenateDungeons(proposalDungeons) << ")";
+        o << ", " << *itguid << ": (" << ConcatenateDungeons(proposalDungeons) << ")";
         for (++itguid; itguid != check.end(); ++itguid)
         {
             LfgDungeonSet temporal;
             LfgDungeonSet &dungeons = QueueDataStore[*itguid].dungeons;
-            o << ", " << *itguid << ": (" << sLFGMgr->ConcatenateDungeons(dungeons) << ")";
+            o << ", " << *itguid << ": (" << ConcatenateDungeons(dungeons) << ")";
             std::set_intersection(proposalDungeons.begin(), proposalDungeons.end(), dungeons.begin(), dungeons.end(), std::inserter(temporal, temporal.begin()));
             proposalDungeons = temporal;
         }
@@ -482,8 +484,9 @@ LfgCompatibility LFGQueue::CheckCompatibility(LfgGuidList check)
         return LFG_COMPATIBLES_WITH_LESS_PLAYERS;
     }
 
+    uint64 gguid = *check.begin();
     proposal.queues = check;
-    proposal.isNew = numLfgGroups != 1;
+    proposal.isNew = numLfgGroups != 1 || sLFGMgr->GetOldState(gguid) != LFG_STATE_DUNGEON;
 
     if (!sLFGMgr->AllQueued(check))
     {
@@ -671,3 +674,5 @@ void LFGQueue::UpdateBestCompatibleInQueue(LfgQueueDataContainer::iterator itrQu
             --queueData.dps;
     }
 }
+
+} // namespace lfg

@@ -38,7 +38,7 @@ enum Spells
     SPELL_SUMMON_REINFORCEMENTS = 34803
 };
 
-enum
+enum Events
 {
     EVENT_ARCANE_RESONANCE      = 1,
     EVENT_ARCANE_DEVASTATION    = 2
@@ -93,7 +93,7 @@ class boss_commander_sarannis : public CreatureScript
                 BossAI::JustSummoned(summon);
             }
 
-            void UpdateAI(uint32 const diff)
+            void UpdateAI(uint32 diff)
             {
                 if (!UpdateVictim())
                     return;

@@ -420,13 +420,12 @@ enum SMART_ACTION
     SMART_ACTION_UPDATE_TEMPLATE                    = 36,     // Entry, Team
     SMART_ACTION_DIE                                = 37,     // No Params
     SMART_ACTION_SET_IN_COMBAT_WITH_ZONE            = 38,     // No Params
-    SMART_ACTION_CALL_FOR_HELP                      = 39,     // Radius
+    SMART_ACTION_CALL_FOR_HELP                      = 39,     // Radius, With Emote
     SMART_ACTION_SET_SHEATH                         = 40,     // Sheath (0-unarmed, 1-melee, 2-ranged)
     SMART_ACTION_FORCE_DESPAWN                      = 41,     // timer
     SMART_ACTION_SET_INVINCIBILITY_HP_LEVEL         = 42,     // MinHpValue(+pct, -flat)
     SMART_ACTION_MOUNT_TO_ENTRY_OR_MODEL            = 43,     // Creature_template entry(param1) OR ModelId (param2) (or 0 for both to dismount)
     SMART_ACTION_SET_INGAME_PHASE_MASK              = 44,     // mask
-
     SMART_ACTION_SET_DATA                           = 45,     // Field, Data (only creature TODO)
     SMART_ACTION_MOVE_FORWARD                       = 46,     // distance
     SMART_ACTION_SET_VISIBILITY                     = 47,     // on/off
@@ -449,7 +448,6 @@ enum SMART_ACTION
     SMART_ACTION_STORE_TARGET_LIST                  = 64,     // varID,
     SMART_ACTION_WP_RESUME                          = 65,     // none
     SMART_ACTION_SET_ORIENTATION                    = 66,     //
-
     SMART_ACTION_CREATE_TIMED_EVENT                 = 67,     // id, InitialMin, InitialMax, RepeatMin(only if it repeats), RepeatMax(only if it repeats), chance
     SMART_ACTION_PLAYMOVIE                          = 68,     // entry
     SMART_ACTION_MOVE_TO_POS                        = 69,     // PointId, xyz
@@ -486,8 +484,12 @@ enum SMART_ACTION
     SMART_ACTION_SEND_TARGET_TO_TARGET              = 100,    // id
     SMART_ACTION_SET_HOME_POS                       = 101,    // none
     SMART_ACTION_SET_HEALTH_REGEN                   = 102,    // 0/1
+    SMART_ACTION_SET_ROOT                           = 103,    // off/on
+    SMART_ACTION_SET_GO_FLAG                        = 104,    // Flags
+    SMART_ACTION_ADD_GO_FLAG                        = 105,    // Flags
+    SMART_ACTION_REMOVE_GO_FLAG                     = 106,    // Flags
 
-    SMART_ACTION_END                                = 103
+    SMART_ACTION_END                                = 107
 };
 
 struct SmartAction
@@ -677,6 +679,7 @@ struct SmartAction
         struct
         {
             uint32 range;
+            uint32 withEmote;
         } callHelp;
 
         struct
@@ -917,6 +920,16 @@ struct SmartAction
         {
             uint32 regenHealth;
         } setHealthRegen;
+
+        struct
+        {
+            uint32 root;
+        } setRoot;
+
+        struct
+        {
+            uint32 flag;
+        } goFlag;
 
         //! Note for any new future actions
         //! All parameters must have type uint32
