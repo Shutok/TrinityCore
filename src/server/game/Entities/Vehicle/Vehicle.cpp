@@ -438,7 +438,6 @@ bool Vehicle::AddPassenger(Unit* unit, int8 seatId)
     SeatMap::iterator seat;
     VehicleJoinEvent* e = new VehicleJoinEvent(this, unit);
     unit->m_Events.AddEvent(e, unit->m_Events.CalculateTime(0));
-    _pendingJoinEvents.push_back(e);
 
     if (seatId < 0) // no specific seat requirement
     {
@@ -448,22 +447,24 @@ bool Vehicle::AddPassenger(Unit* unit, int8 seatId)
 
         if (seat == Seats.end()) // no available seat
         {
-            CancelJoinEvent(e);
+            e->to_Abort = true;
             return false;
         }
 
         e->Seat = seat;
+        _pendingJoinEvents.push_back(e);
     }
     else
     {
         seat = Seats.find(seatId);
         if (seat == Seats.end())
         {
-            CancelJoinEvent(e);
+            e->to_Abort = true;
             return false;
         }
 
         e->Seat = seat;
+        _pendingJoinEvents.push_back(e);
         if (seat->second.Passenger)
         {
             Unit* passenger = ObjectAccessor::GetUnit(*GetBase(), seat->second.Passenger);
@@ -485,7 +486,7 @@ bool Vehicle::AddPassenger(Unit* unit, int8 seatId)
  * @author Machiavelli
  * @date 17-2-2013
  *
- * @param [in,out] unit The passenger to remove..
+ * @param [in,out] unit The passenger to remove.
  */
 
 void Vehicle::RemovePassenger(Unit* unit)
@@ -575,6 +576,26 @@ void Vehicle::Dismiss()
 }
 
 /**
+ * @fn bool Vehicle::IsVehicleInUse() const
+ *
+ * @brief Returns information whether the vehicle is currently used by any unit
+ *
+ * @author Shauren
+ * @date 26-2-2013
+ *
+ * @return true if any passenger is boarded on vehicle, false otherwise.
+ */
+
+bool Vehicle::IsVehicleInUse() const
+{
+    for (SeatMap::const_iterator itr = Seats.begin(); itr != Seats.end(); ++itr)
+        if (itr->second.Passenger)
+            return true;
+
+    return false;
+}
+
+/**
  * @fn void Vehicle::InitMovementInfoForBase()
  *
  * @brief Sets correct MovementFlags2 based on VehicleFlags from DBC.
@@ -612,7 +633,7 @@ void Vehicle::InitMovementInfoForBase()
  * @return null if passenger not found on vehicle, else the DBC record for the seat.
  */
 
-VehicleSeatEntry const* Vehicle::GetSeatForPassenger(Unit* passenger)
+VehicleSeatEntry const* Vehicle::GetSeatForPassenger(Unit const* passenger)
 {
     SeatMap::iterator itr;
     for (itr = Seats.begin(); itr != Seats.end(); ++itr)
@@ -688,25 +709,6 @@ void Vehicle::CalculatePassengerOffset(float& x, float& y, float& z, float& o)
 }
 
 /**
- * @fn void Vehicle::CancelJoinEvent(VehicleJoinEvent* e)
- *
- * @brief Aborts delayed @VehicleJoinEvent objects.
- *        Implies that the related unit will not be boarding the vehicle after all.
- *
- * @author Machiavelli
- * @date 17-2-2013
- *
- * @param [in,out] e The VehicleJoinEvent* to process.
- */
-
-void Vehicle::CancelJoinEvent(VehicleJoinEvent* e)
-{
-    ASSERT(_pendingJoinEvents.back() == e);
-    e->to_Abort = true;
-    _pendingJoinEvents.pop_back();
-}
-
-/**
  * @fn void Vehicle::RemovePendingEvent(VehicleJoinEvent* e)
  *
  * @brief Removes @VehicleJoinEvent objects from pending join event store.
@@ -721,7 +723,7 @@ void Vehicle::CancelJoinEvent(VehicleJoinEvent* e)
 
 void Vehicle::RemovePendingEvent(VehicleJoinEvent* e)
 {
-    for (std::deque<VehicleJoinEvent*>::iterator itr = _pendingJoinEvents.begin(); itr != _pendingJoinEvents.end(); ++itr)
+    for (PendingJoinEventContainer::iterator itr = _pendingJoinEvents.begin(); itr != _pendingJoinEvents.end(); ++itr)
     {
         if (*itr == e)
         {
@@ -744,7 +746,7 @@ void Vehicle::RemovePendingEvent(VehicleJoinEvent* e)
 
 void Vehicle::RemovePendingEventsForSeat(int8 seatId)
 {
-    for (std::deque<VehicleJoinEvent*>::iterator itr = _pendingJoinEvents.begin(); itr != _pendingJoinEvents.end();)
+    for (PendingJoinEventContainer::iterator itr = _pendingJoinEvents.begin(); itr != _pendingJoinEvents.end();)
     {
         if ((*itr)->Seat->first == seatId)
         {
